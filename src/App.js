@@ -5,11 +5,10 @@ import { api } from "./services/api";
 import { signIn } from "./services/security";
 
 function App() {
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  //executar o login hard code
+  /*//executar o login hard code
   useEffect(() => {
     const doSignIn = async () => {
       try {
@@ -27,16 +26,34 @@ function App() {
       }
     }
     doSignIn();
+  }, []);*/
+
+  //efetuar o login do usuario de forma fixa no codigo
+  useEffect(() => {
+
+    
+    const doLogin = async () =>{
+       try { let response = await api.post("/sessions", {
+        email: "rafanleme@gmail.com",
+        password: "123456",
+      })
+      signIn(response.data);
+    }catch (error){
+      setError(true)
+      alert(error.response.data.error)
+       }finally{
+         setLoading(false)
+       }
+     
+    }
+
+    doLogin();
   }, []);
 
   return (
     <>
       <GlobalStyles />
-      {
-        loading ? "Carregando..." :
-          error ? "Ops, algo deu errado" :
-          <Router />
-      }
+      {loading ? "Carregando..." : error ? "Ops, algo deu errado" : <Router />}
     </>
   );
 }

@@ -2,22 +2,56 @@ import { CardComent, CardPost } from "./styles";
 import imgProfile from "../../assets/profile.png"
 import { useState } from "react";
 import { getUser } from "../../services/security";
-import { format } from "date-fns";
+import { format} from "date-fns";
+import { api } from "../../services/api";
+import Input from "../Input";
+import Button from "../Button";
 
 function Post({ data }) {
-
     let signedUser = getUser();
 
-    console.log(data)
-
     const [showComents, setShowComents] = useState(false);
-
     const toggleComents = () => setShowComents(!showComents);
+
+    const [coments, setComents] = useState(data.Answers);
+
+    const [newAnswer, setnewAnswer] = useState({
+        Student: signedUser,
+        description: ""
+    });
+
+    const handleInput = (event) => {
+        setnewAnswer({...newAnswer, [event.target.id]: event.target.value})
+    }
+
+    const handleSubmitAnswer = async (event) => {
+        event.preventDefault();
+
+        let idPost = data.id;
+        let uri = `/questions/${idPost}/answers`;
+
+        try{
+            let newComent = await api.post(uri, {description: newAnswer.description});
+            let newComent2 = {
+                id: newComent.data.id,
+                created_at: newComent.data.createdAt,
+                description: newComent.data.description,
+                Student: signedUser
+            }
+            setComents([...coments, newComent2]);   
+            setnewAnswer({description: ""})
+        } catch(error){
+            alert(error);
+        }
+
+        
+    };
+
 
     return (
         <CardPost>
             <header>
-                <img src={imgProfile} />
+                <img src={imgProfile} alt="Foto de perfil" />
                 <div>
                     <p>por {signedUser.studentId === data.Student.id ? "você" : data.Student.name}</p>
                     <span>em {format(new Date(data.created_at), "dd/MM/yyyy 'às' HH:mm")}</span>
@@ -43,30 +77,32 @@ function Post({ data }) {
                 </h3>
                 {showComents && (
                     <>
-                        <Coment />
+                    {coments.map(coment => <Coment coment={coment} key={data.Answers.id}/>)}
                     </>
                 )}
+                <form onSubmit={handleSubmitAnswer}>
                 <div>
-                    <input placeholder="Comente este post" />
-                    <button>Enviar</button>
+                    <Input id="description" required handler={handleInput} value={newAnswer.description}/>
+                    <Button newAnswer={newAnswer}/>
                 </div>
+                </form>
             </footer>
         </CardPost>
     );
 }
 
-function Coment() {
+function Coment({ coment }) {
 
     return (
         <CardComent>
             <header>
-                <img src={imgProfile} />
+                <img src={coment.Student.image} alt="Foto de perfil do aluno" />
                 <div>
-                    <p>por Ciclano</p>
-                    <span>em 10/10/2021 às 13:00</span>
+                    <p>por {coment.Student.name}</p>
+                    <span>em {format(new Date(coment.created_at), "dd/MM/yyyy 'às' HH:mm")}</span>
                 </div>
             </header>
-            <p>Este é o comentário</p>
+            <p>{coment.description}</p>
         </CardComent>
     );
 }

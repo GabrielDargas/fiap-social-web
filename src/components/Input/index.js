@@ -6,7 +6,7 @@ function Input({ id, label, value, handler, ...rest }) {
       <input
         id={id}
         {...rest}
-        placeholder=" "
+        placeholder=""
         value={value}
         onChange={handler}
       />
